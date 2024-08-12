@@ -6,7 +6,9 @@ export async function studentAuth(req: Request, res: Response, next: NextFunctio
         const authHeader = req.headers.authorization;
 
         if (!authHeader || !authHeader.startsWith("Bearer ")) {
-            return res.status(401).send("Unauthorized");
+            return res.status(401).json({
+                message: "Unauthorized"
+            });
         }
 
         const token = authHeader.split(" ")[1];
@@ -14,7 +16,9 @@ export async function studentAuth(req: Request, res: Response, next: NextFunctio
         const authSecret = process.env.CODEIAL_JWT_SECRET;
 
         if(!authSecret) {
-            return res.status(500).send("Internal Server Error: Token Not Found");
+            return res.status(500).json({
+                message: "Internal Server Error: Token Not Found"
+            });
         }
 
         const decoded = jwt.verify(token,  authSecret);
@@ -24,6 +28,8 @@ export async function studentAuth(req: Request, res: Response, next: NextFunctio
 
         next();
     } catch (error) {
-        return res.status(401).send("Invalid Credentials");
+        return res.status(401).json({
+            message: "Invalid Credentials"
+        });
     }
 }

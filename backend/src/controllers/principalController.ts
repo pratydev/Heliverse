@@ -6,20 +6,20 @@ import jwt from 'jsonwebtoken';
 const creationSchema = zod.object({
     name: zod.string().min(3, 'Name must be at least 3 characters long').max(30, 'Name must be at most 30 characters long'),
     emailId: zod.string().email(),
-    password: zod.string().min(6, 'Password must be at least 6 characters long').max(30, 'Password must be at most 30 characters long'),
+    password: zod.string().min(3, 'Password must be at least 3 characters long').max(30, 'Password must be at most 30 characters long'),
 });
 
 interface updateDetails {
     name?: string;
-    emailId?: string;
+    email?: string;
     password?: string;
 }
 
 export async function signInPrincipal(req: Request, res: Response) {
     try {
-        const { emailId, password } = req.body as { emailId: string, password: string };
+        const { email, password } = req.body as { email: string, password: string };
 
-        if (!emailId || !password) {
+        if (!email || !password) {
             return res.status(400).json({
                 message: 'Invalid request body'
             });
@@ -27,7 +27,7 @@ export async function signInPrincipal(req: Request, res: Response) {
 
         const principal = await prisma.principal.findFirst({
             where: {
-                email: emailId,
+                email: email,
             },
             select: {
                 id: true,
@@ -67,19 +67,19 @@ export async function signInPrincipal(req: Request, res: Response) {
 
 export async function createPrincipal(req: Request, res: Response) {
     try {
-        const response = creationSchema.safeParse(req.body);
+        // const response = creationSchema.safeParse(req.body);
 
-        if (!response.success) {
-            return res.status(400).json({
-                message: 'Invalid request body',
-            });
-        }
+        // if (!response.success) {
+        //     return res.status(400).json({
+        //         message: 'Invalid request body',
+        //     });
+        // }
 
-        const { emailId, password } = req.body as { emailId: string, password: string };
+        const { email, password } = req.body as { email: string, password: string };
 
         const principal = await prisma.principal.create({
             data: {
-                email: emailId,
+                email,
                 password
             }
         });
@@ -387,10 +387,10 @@ export async function assignStudent(req: Request, res: Response) {
 
 export async function updateTeacher(req: Request, res: Response) {
     try {
-        const { name, emailId, password }: updateDetails = req.body;
+        const { name, email, password }: updateDetails = req.body;
         const teacherId: string = req.params.id;
 
-        if (!teacherId || (!name && !emailId && !password)) {
+        if (!teacherId || (!name && !email && !password)) {
             return res.status(400).json({
                 message: 'Invalid request body'
             });
@@ -414,7 +414,7 @@ export async function updateTeacher(req: Request, res: Response) {
             },
             data: {
                 name,
-                email: emailId,
+                email,
                 password
             },
             select: {
@@ -484,10 +484,10 @@ export async function deleteTeacher(req: Request, res: Response) {
 
 export async function updateStudent(req: Request, res: Response) {
     try {
-        const { name, emailId, password }: updateDetails = req.body;
+        const { name, email, password }: updateDetails = req.body;
         const studentId: string = req.params.id;
 
-        if (!studentId || (!name && !emailId && !password)) {
+        if (!studentId || (!name && !email && !password)) {
             return res.status(400).json({
                 message: 'Invalid request body'
             });
@@ -511,7 +511,7 @@ export async function updateStudent(req: Request, res: Response) {
             },
             data: {
                 name,
-                email: emailId,
+                email,
                 password
             },
             select: {

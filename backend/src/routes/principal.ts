@@ -1,18 +1,12 @@
 import { Router } from "express";
-import studentRouter from "./student";
-import teacherRouter from "./teacher";
 import { assignStudent, assignTeacher, createClassroom, createPrincipal, createStudent, createTeacher, deleteStudent, deleteTeacher, signInPrincipal, updateStudent, updateTeacher } from "../controllers/principalController";
 import { principalAuth } from "../middlewares/principalAuth";
 
 const router = Router();
 
-router.use('/student', studentRouter);
+router.post('/create-principal', createPrincipal);
 
-router.use('/teacher', teacherRouter);
-
-router.post('/create-principal', principalAuth, createPrincipal);
-
-router.post('/principal-signin', principalAuth, signInPrincipal);
+router.post('/principal-signin', signInPrincipal);
 
 router.post('/create-teacher', principalAuth, createTeacher);
 
