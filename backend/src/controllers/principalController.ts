@@ -1,13 +1,9 @@
 import { Request, Response } from 'express';
 import { prisma } from '..';
-import zod from 'zod';
 import jwt from 'jsonwebtoken';
+// import { PrincipalAuth } from '../middlewares/principalAuth';
 
-const creationSchema = zod.object({
-    name: zod.string().min(3, 'Name must be at least 3 characters long').max(30, 'Name must be at most 30 characters long'),
-    emailId: zod.string().email(),
-    password: zod.string().min(3, 'Password must be at least 3 characters long').max(30, 'Password must be at most 30 characters long'),
-});
+
 
 interface updateDetails {
     name?: string;
@@ -48,7 +44,7 @@ export async function signInPrincipal(req: Request, res: Response) {
             });
         }
 
-        const token = jwt.sign({ email: principal.email}, process.env.CODEIAL_JWT_SECRET as string, { expiresIn: '5h' });
+        const token = jwt.sign({ email: principal.email }, process.env.CODEIAL_JWT_SECRET as string, { expiresIn: '5h' });
 
         return res.status(200).json({
             message: 'principal signed in successfully',
@@ -100,13 +96,13 @@ export async function createPrincipal(req: Request, res: Response) {
 
 export async function createTeacher(req: Request, res: Response) {
     try {
-        const response = creationSchema.safeParse(req.body);
+        // const response = creationSchema.safeParse(req.body);
 
-        if (!response.success) {
-            return res.status(400).json({
-                message: 'Invalid request body',
-            });
-        }
+        // if (!response.success) {
+        //     return res.status(400).json({
+        //         message: 'Invalid request body',
+        //     });
+        // }
 
         const { name, emailId, password } = req.body as { name: string, emailId: string, password: string };
 
@@ -135,13 +131,13 @@ export async function createTeacher(req: Request, res: Response) {
 
 export async function createStudent(req: Request, res: Response) {
     try {
-        const response = creationSchema.safeParse(req.body);
+        // const response = creationSchema.safeParse(req.body);
 
-        if (!response.success) {
-            return res.status(400).json({
-                message: 'Invalid request body',
-            });
-        }
+        // if (!response.success) {
+        //     return res.status(400).json({
+        //         message: 'Invalid request body',
+        //     });
+        // }
 
         const { name, emailId, password } = req.body as { name: string, emailId: string, password: string };
 
@@ -180,13 +176,17 @@ export async function createClassroom(req: Request, res: Response) {
         const classroom = await prisma.classroom.create({
             data: {
                 name
+            },
+            select: {
+                id: true,
+                name: true,
             }
         });
 
         return res.status(201).json({
             message: 'Classroom created successfully',
             data: {
-                id: classroom.id
+                classroom
             }
         });
     } catch (error) {
@@ -196,6 +196,55 @@ export async function createClassroom(req: Request, res: Response) {
     }
 }
 
+
+export async function fetchTeachers(req: Request, res: Response) {
+    try {
+        const teachers = await prisma.teacher.findMany({
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                password: true,
+            }
+        });
+
+        return res.status(200).json({
+            message: 'Teachers fetched successfully',
+            data: {
+                teachers
+            }
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            message: 'Internal server error while fetching teachers',
+        });
+
+    }
+}
+
+export async function fetchClassrooms(req: Request, res: Response) {
+    try {
+        const classrooms = await prisma.classroom.findMany({
+            select: {
+                id: true,
+                name: true,
+            }
+        });
+
+        return res.status(200).json({
+            message: 'Classrooms fetched successfully',
+            data: {
+                classrooms
+            }
+        });
+
+    } catch (error) {
+        return res.status(500).json({
+            message: 'Internal server error while fetching classrooms',
+        });
+    }
+};
 
 export async function assignTeacher(req: Request, res: Response) {
     try {
@@ -282,7 +331,6 @@ export async function assignTeacher(req: Request, res: Response) {
         });
     }
 }
-
 
 export async function assignStudent(req: Request, res: Response) {
     try {
@@ -418,8 +466,10 @@ export async function updateTeacher(req: Request, res: Response) {
                 password
             },
             select: {
+                id: true,
                 name: true,
                 email: true,
+                password: true,
             }
         });
 
@@ -499,7 +549,7 @@ export async function updateStudent(req: Request, res: Response) {
             }
         });
 
-        if(!existStudent) {
+        if (!existStudent) {
             return res.status(404).json({
                 message: 'Student not found'
             });
@@ -515,8 +565,10 @@ export async function updateStudent(req: Request, res: Response) {
                 password
             },
             select: {
+                id: true,
                 name: true,
                 email: true,
+                password: true,
             }
         });
 

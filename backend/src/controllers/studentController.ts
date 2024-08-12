@@ -1,24 +1,31 @@
 import { Request, Response } from 'express';
 import { prisma } from '..';
 import jwt from 'jsonwebtoken';
+import { StudentAuth } from '../middlewares/studentAuth';
 
-export async function fetchStudents(req: Request, res: Response) {
+export async function fetchClassmates(req: StudentAuth, res: Response) {
     try {
-        const classroomId: string = req.params.id;
 
-        if (!classroomId) {
-            return res.status(400).json({
-                message: 'Invalid request body'
+        if(req.student?.id === undefined) {
+            return res.status(401).json({
+                message: "Unauthorized"
             });
         }
 
-        const classroom = await prisma.classroom.findFirst({
-            where: {
-                id: Number(classroomId)
-            }
-        });
+        const studentId = req.student.id;
 
-        if (!classroom) {
+        const classroomId = await prisma.classroom.findFirst({
+            where: {
+                students: {
+                    some: {
+                        id: studentId
+                    }
+                }
+
+            }
+        })
+
+        if (!classroomId) {
             return res.status(404).json({
                 message: 'Classroom not found'
             });
