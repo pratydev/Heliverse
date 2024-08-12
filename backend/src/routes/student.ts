@@ -1,12 +1,12 @@
 import { Router } from "express";
-import { fetchStudents, signInStudent } from "../controllers/studentController";
+import { fetchClassmates, signInStudent } from "../controllers/studentController";
 import { studentAuth } from "../middlewares/studentAuth";
 const router = Router();
 
 
-router.get('/fetch-classmates', studentAuth, fetchStudents);
+router.get('/fetch-classmates', studentAuth, fetchClassmates);
 
-router.post('/signin', studentAuth, signInStudent);
+router.post('/signin', signInStudent);
 
 
 
