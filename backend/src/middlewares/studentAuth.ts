@@ -1,7 +1,15 @@
 import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 
-export async function studentAuth(req: Request, res: Response, next: NextFunction){
+export interface StudentAuth extends Request {
+    student?: {
+        id: number;
+        name: string;
+        email: string;
+    };
+}
+
+export async function studentAuth(req: StudentAuth, res: Response, next: NextFunction){
     try {
         const authHeader = req.headers.authorization;
 
@@ -23,8 +31,7 @@ export async function studentAuth(req: Request, res: Response, next: NextFunctio
 
         const decoded = jwt.verify(token,  authSecret);
        
-        // @ts-ignore
-        req.student = decoded;
+        req.student = decoded as { id: number; name: string; email: string };
 
         next();
     } catch (error) {

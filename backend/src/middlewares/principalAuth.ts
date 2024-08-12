@@ -1,7 +1,13 @@
 import jwt from 'jsonwebtoken';
 import { Request, Response, NextFunction } from 'express';
 
-export async function principalAuth(req: Request, res: Response, next: NextFunction) {
+export interface PrincipalAuth extends Request {
+    principal?: {
+        email: string;
+    };
+}
+
+export async function principalAuth(req: PrincipalAuth, res: Response, next: NextFunction) {
     try {
         const authHeader = req.headers.authorization;
 
@@ -23,8 +29,7 @@ export async function principalAuth(req: Request, res: Response, next: NextFunct
 
         const decoded = jwt.verify(token, authSecret);
 
-        // @ts-ignore
-        req.principal = decoded;
+        req.principal = decoded as { email: string };
 
         next();
     } catch (error) {
