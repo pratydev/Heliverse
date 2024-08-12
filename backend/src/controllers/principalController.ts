@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { prisma } from '..';
 import zod from 'zod';
+import jwt from 'jsonwebtoken';
 
 const creationSchema = zod.object({
     name: zod.string().min(3, 'Name must be at least 3 characters long').max(30, 'Name must be at most 30 characters long'),
@@ -14,7 +15,57 @@ interface updateDetails {
     password?: string;
 }
 
-async function createPrincipal(req: Request, res: Response) {
+export async function signInPrincipal(req: Request, res: Response) {
+    try {
+        const { emailId, password } = req.body as { emailId: string, password: string };
+
+        if (!emailId || !password) {
+            return res.status(400).json({
+                message: 'Invalid request body'
+            });
+        }
+
+        const principal = await prisma.principal.findFirst({
+            where: {
+                email: emailId,
+            },
+            select: {
+                id: true,
+                email: true,
+                password: true,
+            }
+        });
+
+        if (!principal) {
+            return res.status(404).json({
+                message: 'principal not found'
+            });
+        }
+
+        if (principal.password !== password) {
+            return res.status(401).json({
+                message: 'Invalid credentials'
+            });
+        }
+
+        const token = jwt.sign({ email: principal.email}, process.env.CODEIAL_JWT_SECRET as string, { expiresIn: '5h' });
+
+        return res.status(200).json({
+            message: 'principal signed in successfully',
+            data: {
+                id: principal.id,
+                token
+            }
+        });
+    } catch (error) {
+        return res.status(500).json({
+            message: 'Internal server error while signing in principal',
+        });
+
+    }
+}
+
+export async function createPrincipal(req: Request, res: Response) {
     try {
         const response = creationSchema.safeParse(req.body);
 
@@ -47,7 +98,7 @@ async function createPrincipal(req: Request, res: Response) {
     }
 }
 
-async function createTeacher(req: Request, res: Response) {
+export async function createTeacher(req: Request, res: Response) {
     try {
         const response = creationSchema.safeParse(req.body);
 
@@ -82,7 +133,7 @@ async function createTeacher(req: Request, res: Response) {
 }
 
 
-async function createStudent(req: Request, res: Response) {
+export async function createStudent(req: Request, res: Response) {
     try {
         const response = creationSchema.safeParse(req.body);
 
@@ -116,7 +167,7 @@ async function createStudent(req: Request, res: Response) {
     }
 }
 
-async function createClassroom(req: Request, res: Response) {
+export async function createClassroom(req: Request, res: Response) {
     try {
         const { name } = req.body as { name: string };
 
@@ -146,7 +197,7 @@ async function createClassroom(req: Request, res: Response) {
 }
 
 
-async function assignTeacher(req: Request, res: Response) {
+export async function assignTeacher(req: Request, res: Response) {
     try {
         const { teacherId, classroomId } = req.body as { teacherId: number, classroomId: number };
 
@@ -233,7 +284,7 @@ async function assignTeacher(req: Request, res: Response) {
 }
 
 
-async function assignStudent(req: Request, res: Response) {
+export async function assignStudent(req: Request, res: Response) {
     try {
         const { studentId, classroomId } = req.body as { studentId: number, classroomId: number };
 
@@ -334,7 +385,7 @@ async function assignStudent(req: Request, res: Response) {
     }
 }
 
-async function updateTeacher(req: Request, res: Response) {
+export async function updateTeacher(req: Request, res: Response) {
     try {
         const { name, emailId, password }: updateDetails = req.body;
         const teacherId: string = req.params.id;
@@ -387,7 +438,7 @@ async function updateTeacher(req: Request, res: Response) {
     }
 }
 
-async function deleteTeacher(req: Request, res: Response) {
+export async function deleteTeacher(req: Request, res: Response) {
     try {
         const teacherId: string = req.params.id;
         if (!teacherId) {
@@ -431,7 +482,7 @@ async function deleteTeacher(req: Request, res: Response) {
     }
 }
 
-async function updateStudent(req: Request, res: Response) {
+export async function updateStudent(req: Request, res: Response) {
     try {
         const { name, emailId, password }: updateDetails = req.body;
         const studentId: string = req.params.id;
@@ -483,7 +534,7 @@ async function updateStudent(req: Request, res: Response) {
     }
 }
 
-async function deleteStudent(req: Request, res: Response) {
+export async function deleteStudent(req: Request, res: Response) {
     try {
         const studentId: string = req.params.id;
         if (!studentId) {
@@ -525,17 +576,4 @@ async function deleteStudent(req: Request, res: Response) {
             message: 'Internal server error while deleting student',
         });
     }
-}
-
-export {
-    createPrincipal,
-    createTeacher,
-    createStudent,
-    assignTeacher,
-    assignStudent,
-    updateTeacher,
-    deleteTeacher,
-    updateStudent,
-    deleteStudent,
-    createClassroom
 }
